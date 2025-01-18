@@ -189,7 +189,7 @@ def finetune(cfg: FinetuneConfig) -> None:
     optimizer = AdamW(trainable_params, lr=cfg.learning_rate)
 
     # Create Action Tokenizer
-    action_tokenizer = ActionTokenizer(processor.tokenizer)
+    action_tokenizer = AutoProcessor.from_pretrained("physical-intelligence/fast", trust_remote_code=True)
 
     # Load Fine-tuning Dataset =>> note that we use an RLDS-formatted dataset following Open X-Embodiment by default.
     #   =>> If you want to use a non-RLDS dataset (e.g., a standard PyTorch Dataset) see the following commented block.

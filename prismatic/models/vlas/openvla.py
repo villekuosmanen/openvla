@@ -11,10 +11,10 @@ import numpy as np
 import torch
 from PIL import Image
 from transformers import LlamaTokenizerFast
+from transformers import AutoProcessor  # for FAST tokeniser
 
 from prismatic.models.vlms.prismatic import PrismaticVLM
 from prismatic.overwatch import initialize_overwatch
-from prismatic.vla.action_tokenizer import ActionTokenizer
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)
@@ -25,12 +25,12 @@ class OpenVLA(PrismaticVLM):
         self,
         *args,
         norm_stats: Dict[str, Dict[str, Dict[str, Dict[str, List[float]]]]],
-        action_tokenizer: ActionTokenizer,
         **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.norm_stats = norm_stats
-        self.action_tokenizer = action_tokenizer
+        # Load the tokenizer from the Hugging Face hub
+        self.action_tokenizer = AutoProcessor.from_pretrained("physical-intelligence/fast", trust_remote_code=True)
 
     @torch.inference_mode()
     def predict_action(
@@ -88,7 +88,7 @@ class OpenVLA(PrismaticVLM):
 
         # Extract predicted action tokens and translate into (normalized) continuous actions
         predicted_action_token_ids = generated_ids[0, -self.get_action_dim(unnorm_key) :]
-        normalized_actions = self.action_tokenizer.decode_token_ids_to_actions(predicted_action_token_ids.cpu().numpy())
+        normalized_actions = self.action_tokenizer.decode(predicted_action_token_ids.cpu().numpy())
 
         # Un-normalize Actions
         action_norm_stats = self.get_action_stats(unnorm_key)
